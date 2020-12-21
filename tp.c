@@ -14,19 +14,21 @@ void mostra(char const *file){
     int fd, content;
     char buffer[21];
 
-    fd = open(file, O_RDONLY);
+    fd = open(file, O_RDONLY); //abre em read only pois so queremos mostrar o texto
 
-    if (fd < 0) { 
+    if (fd < 0) { //caso nao consiga abrir o ficheiro
         perror("Erro: ");
         return;
     }
 
     content = read(fd, buffer, 20);
 
+    printf("\n");
+
     while (content > 0) {
         buffer[content] = '\0';
 
-        printf("%s", buffer);
+        printf("%s", buffer); //vai escrevendo o ficheiro para a consola
 
         content = read(fd, buffer, 20);
     }
@@ -34,7 +36,7 @@ void mostra(char const *file){
     if (content == -1) {
         perror("Erro: ");
     }
-    close(fd);
+    close(fd); //fecha o ficheiro
 }
 
 int conta(char const *file){
@@ -54,8 +56,8 @@ int conta(char const *file){
     while (content > 0) {
         buffer[content] = '\0';
 
-        content = read(fd, buffer, 20);
-        count += content;
+        content = read(fd, buffer, 20); 
+        count += content; //conta todos as letras, espaços, \n's, etc...
     }
 
     if (content == -1) {
@@ -69,7 +71,7 @@ void lista(char const *directory){
     struct stat buf;
     if (lstat(directory, &buf) == -1){ //fills the buf while checking for errors
         perror("lstat");
-        exit(EXIT_FAILURE);
+        return;
     }
     switch (buf.st_mode & S_IFMT) { //switch case to see if its a directory
         case S_IFBLK: printf("\nThats a block device, please give a directory as an argument"); return;
@@ -95,12 +97,12 @@ void lista(char const *directory){
     closedir(dir);
 }
 
-void acrescenta(char const *file1, char const *file2){
+void acrescenta(char const *what, char const *toWhere){
     int fd1, fd2, content;
     char buffer[20];
 
-    fd1 = open(file1, O_RDONLY);
-    fd2 = open(file2, O_WRONLY|O_APPEND, S_IRWXU);
+    fd1 = open(what, O_RDONLY);
+    fd2 = open(toWhere, O_WRONLY|O_APPEND, S_IRWXU);
     if (fd1 < 0) { 
         printf("Erro: First file doesnt exist");
         return;
@@ -134,7 +136,7 @@ void informa(char const *file){
     struct stat buf; //will contain the stats of the file
     if (lstat(file, &buf) == -1){ //fills the buf while checking for errors
         perror("lstat");
-        exit(EXIT_FAILURE);
+        return;
     }
     printf("\nFile type: ");
     switch (buf.st_mode & S_IFMT) { //switch case to see the type of the file | man lstat
@@ -158,18 +160,17 @@ void informa(char const *file){
 int main(int argc, char const *argv[])
 {
     char cmd[15], parameters[100], parameters2[100];
-    int num, i;
+    int num = 0, i;
     
     while (1)
     {
-        printf("\n%% ");
+        printf("\n");
         scanf("%s", cmd);
-        if (strcmp(cmd, "termina") == 0) break; // cmd = termina => terminar o programa de seguida
+        if (strcmp(cmd, "termina") == 0) break; //cmd = termina => terminar o programa de seguida
         else if (strcmp(cmd, "acrescenta") == 0){ scanf("%s", parameters); scanf("%s", parameters2); } //cmd = acrescenta lê 2 parametros
-        else scanf("%s", parameters); // qualquer outro cmd lê apenas 1 parametro
-
-        printf("%s %s %s", cmd, parameters, parameters2);
+        else scanf("%s", parameters); //qualquer outro cmd lê apenas 1 parametro
         
+        printf("\n");
 
         if (strcmp(cmd, "mostra") == 0)
         {
@@ -181,10 +182,13 @@ int main(int argc, char const *argv[])
             if (num >= 0){
                 printf("\nO ficheiro contem %d caracteres\n", num);
             }
+            if (num == 0){
+                printf("\nO ficheiro não contem caracteres\n");
+            }
         }
         else if (strcmp(cmd, "apaga") == 0)
         {
-            conta(parameters); // se não existir envia o mesmo erro para o utilizador
+            conta(parameters);
             unlink(parameters);
         }
         else if (strcmp(cmd, "informa") == 0)
@@ -195,9 +199,12 @@ int main(int argc, char const *argv[])
         {
             acrescenta(parameters, parameters2);
         }
-        else if (strcmp(cmd, "lista") == 0) // FIXME: distinguish directories and files
+        else if (strcmp(cmd, "lista") == 0)
         {
             lista(parameters);
+        }
+        else{
+            printf("Comando não encontrado.\n");
         }
     }
     return 0;
